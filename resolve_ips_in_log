@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#By Josef Meile <jmeile@hotmail.com>
 #This script will process a log file and resolve all the ip addresses in the
 #specified column, then it will return all lines with the ips and the resolved
 #hosts
