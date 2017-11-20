@@ -1,0 +1,68 @@
+#!/bin/bash
+
+#This script will process a log file and resolve all the ip addresses in the
+#specified column, then it will return all lines with the ips and the resolved
+#hosts
+
+#You can use it as follows:
+#./resolve_ips_in_log ip_column log_file > new_log_file
+#Where:
+#ip_column:	is the column with the ips to resolve
+#log_file:	is the log file with the data to process
+#new_low_file	is the file to store the processed data
+
+#This script is based on the code posted here:
+#* Replace IPs with Hostnames in a log
+#  Link: https://stackoverflow.com/questions/9781063/replace-ips-with-hostnames-in-a-log
+#  Answer by: wisent
+
+#Why not using logresolve or the apache HostnameLookups directive?
+#* logresolve will replace all the ips by its resolved hostnames, so the original
+#  data is lost. I need both: the ips and the hosts
+#* HostnameLookups: with this directive you could use a custom LogFormat with
+#  %h (Remote hostname) and %a (Client IP address of the request); however,
+#  turning this on may slow down your webserver because dns lookups on the fly
+#  will require some extra time
+
+function replaceIp {
+	ipCol=$1
+	logFile=$2
+
+	while read line
+	do
+		declare -i colIndex=1
+		for word in $line
+		do
+			#Prints the original column
+			echo -n $word
+			echo -ne "\t"
+			#if we got to the column of interest
+			if [ "$colIndex" -eq "$ipCol" ]
+			then
+				# if word is an ip address change it to hostname
+				if [[ $word =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]
+				then
+					# check if ip address is correct
+					OIFS=$IFS
+					IFS="."
+					ip=($word)
+					IFS=$OIFS
+					if [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+					then
+						echo -n `host $word | cut -d' ' -f 5`
+					else
+						echo -n "invalid_ip"
+					fi
+				# else invalid ip
+				else
+					echo -n "invalid_ip"
+				fi
+				echo -ne "\t"
+			fi
+			colIndex+=1
+		done
+		# new line
+		echo
+	done < "$logFile"
+}
+replaceIp $1 $2

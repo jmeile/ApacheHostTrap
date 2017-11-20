@@ -1,0 +1,6 @@
+#This file contains a verbose list of the banned hosts. It has the following
+#apache format: "%h %v %t \"%r\" \"%{User-agent}i\""
+#Use this file to see which VirtualHost and which file were trying to access the
+#banned host
+
+

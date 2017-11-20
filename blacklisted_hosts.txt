@@ -1,0 +1,13 @@
+#This file contains a list of the banned hosts and also a list of the whitelisted
+#ones. It has the following format: <ip_address> [allow|deny]
+#To ban a host use the word: "deny" to whitelist it use: "allow"
+#You may take a look at the file: blacklisted_hosts_full.txt to see what a host
+#was trying to access when it got banned
+
+#archive.org bot
+207.241.231.170 allow
+207.241.229.237 allow
+207.241.229.235 allow
+
+
+
