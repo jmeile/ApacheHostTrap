@@ -20,6 +20,9 @@ The following files are included:
   * blacklisted_hosts.txt: RewriteMap for blocking access with apache
   * blacklisted_hosts_full.txt: verbose log for looking what a banned host was
     accessing, when it got banned
+* blacklisted_hosts_my_list.txt: This is a list of hosts I have banned forever
+  in my websites. They were accessing files that weren't present or disabled on
+  my websites. You may use them if you want.
 * resolve_ips_in_log: this is just a shell script to resolve the ip addresses in
   your blacklist files. This is usefull for example to make sure that you didn't 
   banned a legit service, ie: the Archive.org bot, which unfortunatelly tries to
