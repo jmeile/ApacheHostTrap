@@ -1,5 +1,11 @@
 # ApacheHostTrap
-Configuration files to ban bad hosts in apache
+Configuration files to ban bad hosts in Apache 2.4
+
+Note: this may work in Apache 2.2, but you will have to manually install the
+mod_define module, which can be downloaded from here:
+https://people.apache.org/~rjung/mod_define
+
+For Apache 2.4, you don't need to do anything. It is already included
 
 The following files are included:
 * evil_host_trap_env.conf: sets the variable EVIL_HOST_PATH indicating the
