@@ -5,6 +5,13 @@ Note: this may work in Apache 2.2, but you will have to manually install the
 mod_define module, which can be downloaded from here:
 https://people.apache.org/~rjung/mod_define
 
+I tried that module, but somehow I didn't manage to get it working with Apache
+2.2. At the end, I replaced all the ${APACHE_LOG_DIR} and ${EVIL_HOST_PATH}
+by the real paths. So, I guess you'd better use Apache 2.4
+
+Then you have to define the variable APACHE_LOG_DIR (see the file:
+evil_host_trap_env.conf)
+
 For Apache 2.4, you don't need to do anything. It is already included
 
 The following files are included:
@@ -39,7 +46,9 @@ The following files are included:
 Additionally, I also include this file:
 * block_bots.conf: blocks some potentially bad bots, ie: downloaders, mail
   addresses collector programs, from accessing your website. This isn't an
-  automatic approach. You will have to manually add the bot in this file.
+  automatic approach. You will have to manually add the bot in this file. Note
+  that this file also uses Apache 2.4 syntax. To make it compatible with Apache
+  2.2 you will have to read the comments inside the file.
 
 You will find more information about using it inside the file:
 evil_host_trap_init.conf
