@@ -37,3 +37,7 @@ Additionally, I also include this file:
 
 You will find more information about using it inside the file:
 evil_host_trap_init.conf
+
+Please note that after cloning this repository, you have to set the permissions
+so that the apache user can access the files, ie:
+chown -R www-data:www-data /usr/local/apache_evil_host_trap
