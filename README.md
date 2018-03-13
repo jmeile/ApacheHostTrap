@@ -1,19 +1,6 @@
 # ApacheHostTrap
 Configuration files to ban bad hosts in Apache 2.4
 
-Note: this may work in Apache 2.2, but you will have to manually install the
-mod_define module, which can be downloaded from here:
-https://people.apache.org/~rjung/mod_define
-
-I tried that module, but somehow I didn't manage to get it working with Apache
-2.2. At the end, I replaced all the ${APACHE_LOG_DIR} and ${EVIL_HOST_PATH}
-by the real paths. So, I guess you'd better use Apache 2.4
-
-Then you have to define the variable APACHE_LOG_DIR (see the file:
-evil_host_trap_env.conf)
-
-For Apache 2.4, you don't need to do anything. It is already included
-
 The following files are included:
 * evil_host_trap_env.conf: sets the variable EVIL_HOST_PATH indicating the
   location of the configuration files. By default, I set it to:
@@ -47,10 +34,7 @@ Additionally, I also include this file:
 * block_bots.conf: blocks some potentially bad bots, ie: downloaders, mail
   addresses collector programs, from accessing your website. This isn't an
   automatic approach. You will have to manually add the bot in this file. Note
-  that this file also uses Apache 2.4 syntax. To make it compatible with Apache
-  2.2 you will have to read the comments inside the file. Also note that if you
-  want to restrict access by ip (Require ip), then you can't use this; it is
-  incompatible with this kind of restrictions.
+  that this file also uses Apache 2.4 syntax.
 
 You will find more information about using it inside the file:
 evil_host_trap_init.conf
