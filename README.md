@@ -48,7 +48,9 @@ Additionally, I also include this file:
   addresses collector programs, from accessing your website. This isn't an
   automatic approach. You will have to manually add the bot in this file. Note
   that this file also uses Apache 2.4 syntax. To make it compatible with Apache
-  2.2 you will have to read the comments inside the file.
+  2.2 you will have to read the comments inside the file. Also note that if you
+  want to restrict access by ip (Require ip), then you can't use this; it is
+  incompatible with this kind of restrictions.
 
 You will find more information about using it inside the file:
 evil_host_trap_init.conf
