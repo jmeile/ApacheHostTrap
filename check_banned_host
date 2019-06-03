@@ -1,0 +1,69 @@
+#!/bin/bash
+
+#By Josef Meile <jmeile@hotmail.com> @ June, 2019
+
+#Checks if a host is present in the blacklist host text file. If so, then it
+#will return the following:
+#* If the host is suffixed by: deny, then it will get the banned time. If it
+#  doesn't have expired yet, then it will return 0 (host is still banned);
+#  otherwise, it will return 1 (host isn't banned anymore so, checks will be
+#  done again to make sure that it isn't trying to access forbidden links).
+#* If the host is suffixed by allow, then it will return 2 (host was
+#  whitelisted). On this case, the host will bypass all checks.
+#If the host isn't found in the blacklist host file, then 1 will be returned
+#and the checks will be done.
+
+#Before using it, you have to setup the excecutable permissions for this file,
+#ie: chmod +x check_banned_host 
+
+#Where the text file containing the whitelisted and banned hosts is located
+BANNED_HOSTS_PATH=/usr/local/ApacheHostTrap/blacklisted_hosts.txt
+
+#Time in seconds to ban the ip, ie: 86400 will ban the host for one day:
+#24 (hours in a day) * 60 (minutes in an hour) * 60 (seconds in a minute)=86400
+UNBAN_TIME=86400
+
+function check_banned_host(){
+  #Description: Checks if an ip is present in the blacklisted host text file
+  #Parameters:
+  #  $1: ip to check
+  #Returns:
+  #  0 if the ip is still banned
+  #  1 if the ip ban time expired or it wasn't present on the text file
+  #  2 if the ip was whitelisted
+
+  #If the Ip is present in the text file, then gets what is suffixing it, which
+  #can be 'allow' or 'deny ban_time'
+  local ip_entry=`grep "$1" $BANNED_HOSTS_PATH | cut -f2- -d' '`
+
+  local ip_values
+  validation_passed=1
+  if [ "$ip_entry" ]; then
+    #If the ip was found, then it will put the strings suffixing it into an
+    #array
+    read -ra ip_values <<< "$ip_entry"
+
+    if [ "${ip_values[0]}" == "deny" ] ; then
+      #If the first value in the array is 'deny', then calculates the banning
+      #time
+      local block_expiration=$(( ${ip_values[1]} + $UNBAN_TIME ))
+
+      #Gets the current seconds since the epoch
+      local current_seconds=`date +%s`
+
+      #If the banning time doesn't have passed yet, then it keeps it banned
+      if (( block_expiration > current_seconds )); then
+        validation_passed=0
+      fi
+    else
+      #It is 'allow', so it means that it is whitelisted
+      validation_passed=2
+    fi
+  fi
+}
+
+#This will keep the function reading ips untill the apache server gets stopped or restarted
+while read host_ip; do
+  check_banned_host $host_ip
+  echo $validation_passed
+done
