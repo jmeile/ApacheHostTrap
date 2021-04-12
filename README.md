@@ -98,6 +98,10 @@ Additionally, I also include this file:
   that this file also uses Apache 2.4 syntax. To make it compatible with Apache
   2.2 you will have to read the comments inside the file.
 
+  Please also note that this file will disable any *Require ip* or similar
+  instruction inside a posterior *Directory* directive. To cope with this, you
+  will have to use *Location* instead (See the VirtualHost example).
+
 You will find more information about using it inside the file:
 evil_host_trap_init.conf
 
