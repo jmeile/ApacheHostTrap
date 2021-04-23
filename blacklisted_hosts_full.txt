@@ -1,8 +1,0 @@
-#By Josef Meile <jmeile@hotmail.com> @ June, 2019
-
-#This file contains a verbose list of the banned hosts. It has the following
-#apache format: ""%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"",
-#which corresponds to the combined log.
-#Use this file to see which VirtualHost and which file the banned host was
-#trying to get
-
