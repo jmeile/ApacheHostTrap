@@ -34,12 +34,14 @@ git clone https://github.com/jmeile/ApacheHostTrap
 * Copy the files:
   * blacklisted_hosts.txt.sample and
   * blacklisted_hosts_full.txt
+
   to:
   * blacklisted_hosts.txt and
   * blacklisted_hosts_full.txt respectively
 
 * Edit the file:
   * blacklisted_hosts.txt
+
   and add the IPs you want to whitelist, ie:
   `aaa.bbb.ccc.ddd allow`
 
