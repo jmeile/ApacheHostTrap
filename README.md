@@ -31,6 +31,20 @@ git clone https://github.com/jmeile/ApacheHostTrap
   * evil_host_trap_register.conf
   In that order
 
+* Copy the files:
+  * blacklisted_hosts.txt.sample and
+  * blacklisted_hosts_full.txt
+  to:
+  * blacklisted_hosts.txt and
+  * blacklisted_hosts_full.txt respectively
+
+* Edit the file:
+  * blacklisted_hosts.txt
+  and add the IPs you want to whitelist, ie:
+  `aaa.bbb.ccc.ddd allow`
+
+  where *aaa.bbb.ccc.ddd* is a valid ip address.
+
 * Edit the script: check_banned_host and set the following variables according
   to your needs:
   * BANNED_HOSTS_PATH: Where the text file containing the whitelisted and banned
