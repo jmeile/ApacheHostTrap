@@ -42,7 +42,8 @@ git clone https://github.com/jmeile/ApacheHostTrap
 * Edit the file:
   * blacklisted_hosts.txt
 
-  and add the IPs you want to whitelist, ie:
+  and add the IPs you want to whitelist, eg:
+
   `aaa.bbb.ccc.ddd allow`
 
   where *aaa.bbb.ccc.ddd* is a valid ip address.
@@ -64,6 +65,10 @@ git clone https://github.com/jmeile/ApacheHostTrap
 
 * If you are using the block_bots.conf file, then you may also add or remove
   some user agents there.
+
+* Finally give your apache user the rights to access those files, eg:
+
+  `chown -R www-data:www-data /usr/local/AapcheHostTrap`
 
 ## Some more detailed documentation
 Note: this may work in Apache 2.2, but you will have to manually install the
