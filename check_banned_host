@@ -1,9 +1,19 @@
 #!/bin/bash
-
 #By Josef Meile <jmeile@hotmail.com> @ June, 2019
 
-#Checks if a host is present in the blacklist host text file. If so, then it
-#will return the following:
+#Checks if a host is present in the blacklist host text file.
+
+#Usage:
+# 1) ./check_banned_host [rotate] -> Here you can interactivelly write the ips
+#    you want to check, then the script will echo an answer
+# 2) ./check_banned_host [rotate] < blacklisted_hosts.txt --> Here the file
+#    blacklisted_hosts.txt will be scanned and an answer will be either printed
+#    or it will be rotated
+# 3) it will be called from Apache. Here Apache will handle the request
+#    according to the answer code
+
+
+#If the script is called without argumentsm then it will return the following:
 #* If the host is suffixed by: deny, then it will get the banned time. If it
 #  doesn't have expired yet, then it will return 0 (host is still banned);
 #  otherwise, it will return 1 (host isn't banned anymore so, checks will be
@@ -13,15 +23,67 @@
 #If the host isn't found in the blacklist host file, then 1 will be returned
 #and the checks will be done.
 
+#If called with rotate, then the blacklisted_hosts.txt file will be scanned and
+#the expired bans will be deleted
+
 #Before using it, you have to setup the excecutable permissions for this file,
 #ie: chmod +x check_banned_host 
 
-#Where the text file containing the whitelisted and banned hosts is located
-BANNED_HOSTS_PATH=/usr/local/ApacheHostTrap/blacklisted_hosts.txt
+#Path were the apache host scripts are located
+APACHE_HOST_TRAP_PATH=/usr/local/ApacheHostTrap
+
+#This is the path where the file blacklisted_hosts.txt is stored
+BANNED_HOSTS_BASE_PATH=$APACHE_HOST_TRAP_PATH
+
+#This is the base name of the blacklisted hosts file. Usually you don't need
+#to change this
+BANNED_HOSTS_BASE_NAME=blacklisted_hosts
+
+#Full path of the blacklisted hosts files. Do not change it
+BANNED_HOSTS_PATH=$BANNED_HOSTS_BASE_PATH/$BANNED_HOSTS_BASE_NAME.txt
+BANNED_HOSTS_FULL_PATH=$BANNED_HOSTS_BASE_PATH/"$BANNED_HOSTS_BASE_NAME"_full.txt
+
+#Here the backup of the banned host files will be kept
+BANNED_HOSTS_BACKUP_BASE_PATH=$APACHE_HOST_TRAP_PATH/logs/banned
+
+#Name of the current banned hosts backup files, do not change them
+BANNED_HOSTS_CURRENT_BACKUP=$BANNED_HOSTS_BACKUP_BASE_PATH/"$BANNED_HOSTS_BASE_NAME"_short-$(date +'%Y-%m-%d_%H.%M.%S').bak
+BANNED_HOSTS_FULL_CURRENT_BACKUP=$BANNED_HOSTS_BACKUP_BASE_PATH/"$BANNED_HOSTS_BASE_NAME"_full-$(date +'%Y-%m-%d_%H.%M.%S').bak
+
+#Base path for the unbanned log files
+BASE_LOG_FILE_PATH=$BANNED_HOSTS_BASE_PATH/logs/unbanned
+
+#Base file name of rotation logs
+BASE_LOG_FILE_NAME=rotate
+
+TMP_PATH="/tmp"
+
+#Current log file for this execution
+CURRENT_LOG_FILE="$TMP_PATH/$BASE_LOG_FILE_NAME-$(date +'%Y-%m-%d_%H.%M.%S').log"
+
+#Number of logs to keep
+LOGS_TO_KEEP=30
+
+#This temporal file will be used while expiring the bans
+TMP_FILE=$TMP_PATH/$BANNED_HOSTS_BASE_NAME.txt
 
 #Time in seconds to ban the ip, ie: 86400 will ban the host for one day:
 #24 (hours in a day) * 60 (minutes in an hour) * 60 (seconds in a minute)=86400
 UNBAN_TIME=86400
+
+#This command must be ran after processing the log files; otherwise, no new
+#host will be registered
+APACHE_RELOAD_CMD="/usr/sbin/service apache2 reload"
+
+#Command for compressing old logs
+ZIP_COMMAND="bzip2 --best"
+
+function log_message(){
+  #Description: logs the entered message to CURRENT_LOG_FILE
+  #Parameters:
+  #  $1: message to log
+  echo "$1" >> $CURRENT_LOG_FILE
+}
 
 function check_banned_host(){
   #Description: Checks if an ip is present in the blacklisted host text file
@@ -62,8 +124,118 @@ function check_banned_host(){
   fi
 }
 
-#This will keep the function reading ips untill the apache server gets stopped or restarted
-while read host_ip; do
-  check_banned_host $host_ip
-  echo $validation_passed
-done
+function expire_banned_host(){
+  #Description: Expire banned hosts as soon as the UNBAN_TIME has passed
+  #Parameters:
+  #  $1: entry to check
+  #Returns:
+  #  If the host is still banned, it is a white list or a comment, then it will
+  #  be echoed to a temporary file 
+
+  local file_entry_par=$1
+  local entry_values
+
+  echo_line=0
+  if [[ $file_entry_par =~ ^#.* ]] ; then
+    #It is a comment
+    echo_line=1
+  else
+    read -ra entry_values <<< "$file_entry_par"
+    if [[ "${entry_values[1]}" == "allow" ]] ; then
+      #It is a whitelisted host
+      echo_line=1
+    elif [[ "${entry_values[1]}" == "deny" ]] ; then
+      #This host was banned, now checking if banned time has passed
+
+      log_message "Host ban was found"
+      banning_time=${entry_values[2]}
+
+      #Gets the banning time and adds the expiration time
+      local block_expiration=$(( $banning_time + $UNBAN_TIME ))
+
+      #Gets the current seconds since the epoch
+      local current_seconds=`date +%s`
+ 
+      log_message "Host banned at:      `date -d @$banning_time`"
+      log_message "Host ban expiration: `date -d @$block_expiration`"
+
+      #If the banning time doesn't have passed yet, then it will be echoed
+      if (( block_expiration > current_seconds )); then
+        echo_line=1
+      fi
+    else
+      #Other things will be always echoed
+      echo_line=1
+    fi
+  fi
+
+  if [[ $echo_line == "1" ]] ; then
+    #Saves this entry to the temporal file
+    log_message "Line: $LINE_NO was kept:"
+    echo "$file_entry_par" >> $TMP_FILE
+  else
+    #Prints some debug info
+    log_message "Host in line: $LINE_NO was unbanned:"
+    DROPPED=$((DROPPED+1))
+  fi
+  log_message $file_entry_par
+}
+
+if [[ $# == "1" && $1 == "rotate" ]] ; then
+  log_message "Current date: `date`"
+  #Human representation of the UNBAN_TIME
+  UNBAN_TIME_HUMAN=`eval "echo $(date -ud "@$UNBAN_TIME" +'$((%s/3600/24)) days %H hours %M minutes %S seconds')"`
+  log_message "Unban time:   $UNBAN_TIME_HUMAN"
+  > $TMP_FILE
+  LINE_NO=0
+  DROPPED="0"
+  while read file_entry; do
+    LINE_NO=$((LINE_NO+1))
+    expire_banned_host "$file_entry"
+  done < $BANNED_HOSTS_PATH
+  log_message "Processed:   $LINE_NO entries"
+  log_message "Dropped:     $DROPPED entries"
+  log_message "Finished at: `date`"
+  log_message ""
+
+  #Zips the bakup file before moving the current backup
+  $ZIP_COMMAND $BANNED_HOSTS_BACKUP_BASE_PATH/"$BANNED_HOSTS_BASE_NAME"*.bak
+
+  #If there are more than LOGS_TO_KEEP short logs, then remove the rest
+  log_rotate_cmd="ls -1tr $BANNED_HOSTS_BACKUP_BASE_PATH/\"$BANNED_HOSTS_BASE_NAME\"_short*.bak.* | head -n -$LOGS_TO_KEEP | xargs -d '\n' rm -f --"
+  eval $log_rotate_cmd
+
+  #If there are more than LOGS_TO_KEEP full logs, then remove the rest
+  log_rotate_cmd="ls -1tr $BANNED_HOSTS_BACKUP_BASE_PATH/\"$BANNED_HOSTS_BASE_NAME\"_full*.bak.* | head -n -$LOGS_TO_KEEP | xargs -d '\n' rm -f --"
+  eval $log_rotate_cmd
+
+  #Copies the current backup files
+  mv $BANNED_HOSTS_PATH $BANNED_HOSTS_CURRENT_BACKUP
+  mv $BANNED_HOSTS_FULL_PATH $BANNED_HOSTS_FULL_CURRENT_BACKUP
+
+  #Copies the new banned host file without the unbanned hosts 
+  mv $TMP_FILE $BANNED_HOSTS_PATH
+
+  #Recreates the full log file
+  touch $BANNED_HOSTS_FULL_PATH
+
+  #Reloads apache configuration
+  $APACHE_RELOAD_CMD
+
+  #Zips the log files
+  $ZIP_COMMAND $BASE_LOG_FILE_PATH/*.log
+
+  #If there are more than LOGS_TO_KEEP logs, then remove the rest
+  log_rotate_cmd="ls -1tr $BASE_LOG_FILE_PATH/*.log.* | head -n -$LOGS_TO_KEEP | xargs -d '\n' rm -f --"
+  eval $log_rotate_cmd
+
+  #Moves the current log
+  mv $CURRENT_LOG_FILE $BASE_LOG_FILE_PATH
+else
+  #This will keep the function reading ips until the apache server gets stopped or restarted
+  #or if ran interactively, then until the user press CTRL+C
+  while read host_ip; do
+    check_banned_host $host_ip
+    echo $validation_passed
+  done
+fi

@@ -50,13 +50,26 @@ git clone https://github.com/jmeile/ApacheHostTrap
 
 * Edit the script: check_banned_host and set the following variables according
   to your needs:
-  * BANNED_HOSTS_PATH: Where the text file containing the whitelisted and banned
-    hosts is located, ie:
+  * APACHE_HOST_TRAP_PATH: path Where the Apache Host Trap files are stored, eg:
 ```
 /usr/local/ApacheHostTrap/blacklisted_hosts.txt
 ```
+  * LOGS_TO_KEEP: number of log files to keep after running the rotation script.
+    It defaults to 30.
   * UNBAN_TIME: Time in seconds to ban the ip, ie: 86400 will ban the hosts for
     one day.
+  * APACHE_RELOAD_CMD: command to reload Apache configuration files. This command
+    must be ran after processing the log files; otherwise, no new host will be
+    registered. It defaults to: "/usr/sbin/service apache2 reload", which is the
+    ubuntu way of doing this; it may differ on your linux distro.
+  * ZIP_COMMAND: command for zipping logs. It defaults to: "bzip2 --best". 
+
+* The script: check_banned_host will be used by Apache to ban hosts. The script
+  should be also used on a cron job to delete expired bans; this could be done
+  once a day, eg, addd this to your root crontab:
+```
+59 00 * * * /usr/local/ApacheHostTrap/check_banned_host rotate
+``` to expire banned hosts on midnight.
 
 * You may also want to edit the files: evil_host_trap_no_wp.conf and
   evil_host_trap_wp.conf according to your needs, ie: add more exploits. You can

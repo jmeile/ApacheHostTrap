@@ -1,4 +1,10 @@
 blacklisted_hosts.txt
 blacklisted_hosts_full.txt
+*.log
 .DS_Store
 *.swp
+*.bak
+*.old
+*.zip
+*.gz
+*.bz2
