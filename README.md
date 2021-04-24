@@ -101,7 +101,7 @@ evil_host_trap_env.conf). Apche 2.4 already does this by default.
 The following files are included:
 * evil_host_trap_env.conf: sets the variable EVIL_HOST_PATH indicating the
   location of the configuration files. By default, I set it to:
-  /usr/local/ApacheHostTrap
+  ```/usr/local/ApacheHostTrap```
 * evil_host_trap_init.conf: initializes the bot trap engine. Here the already
   registered hosts will be banned through a RewriteRule. Some common exploits are
   also defined here.
