@@ -67,9 +67,10 @@ git clone https://github.com/jmeile/ApacheHostTrap
 * The script: check_banned_host will be used by Apache to ban hosts. The script
   should be also used on a cron job to delete expired bans; this could be done
   once a day, eg, addd this to your root crontab:
-```
-59 00 * * * /usr/local/ApacheHostTrap/check_banned_host rotate
-``` to expire banned hosts on midnight.
+  ```
+  59 00 * * * /usr/local/ApacheHostTrap/check_banned_host rotate
+  ```
+  to expire banned hosts on midnight.
 
 * You may also want to edit the files: evil_host_trap_no_wp.conf and
   evil_host_trap_wp.conf according to your needs, ie: add more exploits. You can
