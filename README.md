@@ -33,7 +33,7 @@ git clone https://github.com/jmeile/ApacheHostTrap
 
 * Copy the files:
   * blacklisted_hosts.txt.sample and
-  * blacklisted_hosts_full.txt
+  * blacklisted_hosts_full.txt.sample
 
   to:
   * blacklisted_hosts.txt and
@@ -51,9 +51,9 @@ git clone https://github.com/jmeile/ApacheHostTrap
 * Edit the script: check_banned_host and set the following variables according
   to your needs:
   * APACHE_HOST_TRAP_PATH: path Where the Apache Host Trap files are stored, eg:
-```
-/usr/local/ApacheHostTrap/blacklisted_hosts.txt
-```
+    ```
+    /usr/local/ApacheHostTrap/blacklisted_hosts.txt
+    ```
   * LOGS_TO_KEEP: number of log files to keep after running the rotation script.
     It defaults to 30.
   * UNBAN_TIME: Time in seconds to ban the ip, ie: 86400 will ban the hosts for
