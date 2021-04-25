@@ -70,7 +70,13 @@ git clone https://github.com/jmeile/ApacheHostTrap
   ```
   59 00 * * * /usr/local/ApacheHostTrap/check_banned_host rotate
   ```
-  to expire banned hosts on midnight.
+  to expire banned hosts on midnight. Or if you wish, you can also rotate the
+  log each month:
+  ```
+  00 00 01 * * /usr/local/ApacheHostTrap/check_banned_host rotate
+  ```
+  Please note that log rotation is not needed in order to make the banning
+  working; it is just for making the logs smaller.
 
 * You may also want to edit the files: evil_host_trap_no_wp.conf and
   evil_host_trap_wp.conf according to your needs, ie: add more exploits. You can
