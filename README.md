@@ -76,7 +76,8 @@ git clone https://github.com/jmeile/ApacheHostTrap
   00 00 01 * * /usr/local/ApacheHostTrap/check_banned_host rotate
   ```
   Please note that log rotation is not needed in order to make the banning
-  working; it is just for making the logs smaller.
+  working; it is just for making the logs smaller. Avoid running it too often,
+  eg: do not run it each 10 minutes or less.
 
 * You may also want to edit the files: evil_host_trap_no_wp.conf and
   evil_host_trap_wp.conf according to your needs, ie: add more exploits. You can
@@ -88,7 +89,7 @@ git clone https://github.com/jmeile/ApacheHostTrap
 
 * Finally give your apache user the rights to access those files, eg:
 
-  `chown -R www-data:www-data /usr/local/AapcheHostTrap`
+  `chown -R www-data:www-data /usr/local/ApcheHostTrap`
 
 ## Some more detailed documentation
 Note: this may work in Apache 2.2, but you will have to manually install the
