@@ -92,6 +92,7 @@ git clone https://github.com/jmeile/ApacheHostTrap
   `chown -R www-data:www-data /usr/local/ApacheHostTrap`
 
 * Finally restart apache:
+
   `service apache2 restart`
 
 ## Some more detailed documentation
