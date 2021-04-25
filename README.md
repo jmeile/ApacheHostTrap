@@ -68,11 +68,13 @@ git clone https://github.com/jmeile/ApacheHostTrap
   should be also used on a cron job to delete expired bans; this could be done
   once a day, eg, addd this to your root crontab:
   ```
+  #Rotates ApacheHostTrap logs
   59 00 * * * /usr/local/ApacheHostTrap/check_banned_host rotate
   ```
   to expire banned hosts on midnight. Or if you wish, you can also rotate the
   log each month:
   ```
+  #Rotates ApacheHostTrap logs
   00 00 01 * * /usr/local/ApacheHostTrap/check_banned_host rotate
   ```
   Please note that log rotation is not needed in order to make the banning
