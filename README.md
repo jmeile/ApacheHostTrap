@@ -87,9 +87,12 @@ git clone https://github.com/jmeile/ApacheHostTrap
 * If you are using the block_bots.conf file, then you may also add or remove
   some user agents there.
 
-* Finally give your apache user the rights to access those files, eg:
+* Give your apache user the rights to access those files, eg:
 
   `chown -R www-data:www-data /usr/local/ApacheHostTrap`
+
+* Finally restart apache:
+  `service apache2 restart`
 
 ## Some more detailed documentation
 Note: this may work in Apache 2.2, but you will have to manually install the
