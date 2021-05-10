@@ -9,7 +9,10 @@
 # 2) ./check_banned_host [rotate] < blacklisted_hosts.txt --> Here the file
 #    blacklisted_hosts.txt will be scanned and an answer will be either printed
 #    or it will be rotated
-# 3) it will be called from Apache. Here Apache will handle the request
+# 3) ./check_banned_host debug < blacklisted_hosts.txt --> It will only print 
+#    the current whitelists, bans, and expirations, but it won't remove expired 
+#    bans. It is only a way of showing current banned ips.
+# 4) it will be called from Apache. Here Apache will handle the request
 #    according to the answer code
 
 
@@ -181,7 +184,12 @@ function expire_banned_host(){
   log_message $file_entry_par
 }
 
-if [[ $# == "1" && $1 == "rotate" ]] ; then
+SCRIPT_ACTION=
+if [[ $# == "1" ]] ; then
+  SCRIPT_ACTION=$1
+fi
+
+if [[ $SCRIPT_ACTION == "rotate" || $SCRIPT_ACTION == "debug" ]] ; then
   log_message "Current date: `date`"
   #Human representation of the UNBAN_TIME
   UNBAN_TIME_HUMAN=`eval "echo $(date -ud "@$UNBAN_TIME" +'$((%s/3600/24)) days %H hours %M minutes %S seconds')"`
@@ -198,39 +206,48 @@ if [[ $# == "1" && $1 == "rotate" ]] ; then
   log_message "Finished at: `date`"
   log_message ""
 
-  #Zips the bakup file before moving the current backup
-  $ZIP_COMMAND $BANNED_HOSTS_BACKUP_BASE_PATH/"$BANNED_HOSTS_BASE_NAME"*.bak
+  if [[ $SCRIPT_ACTION == "rotate" ]] ; then
+    #Zips the bakup file before moving the current backup
+    $ZIP_COMMAND $BANNED_HOSTS_BACKUP_BASE_PATH/"$BANNED_HOSTS_BASE_NAME"*.bak
 
-  #If there are more than LOGS_TO_KEEP short logs, then remove the rest
-  log_rotate_cmd="ls -1tr $BANNED_HOSTS_BACKUP_BASE_PATH/\"$BANNED_HOSTS_BASE_NAME\"_short*.bak.* | head -n -$LOGS_TO_KEEP | xargs -d '\n' rm -f --"
-  eval $log_rotate_cmd
+    #If there are more than LOGS_TO_KEEP short logs, then remove the rest
+    log_rotate_cmd="ls -1tr $BANNED_HOSTS_BACKUP_BASE_PATH/\"$BANNED_HOSTS_BASE_NAME\"_short*.bak.* | head -n -$LOGS_TO_KEEP | xargs -d '\n' rm -f --"
+    eval $log_rotate_cmd
 
-  #If there are more than LOGS_TO_KEEP full logs, then remove the rest
-  log_rotate_cmd="ls -1tr $BANNED_HOSTS_BACKUP_BASE_PATH/\"$BANNED_HOSTS_BASE_NAME\"_full*.bak.* | head -n -$LOGS_TO_KEEP | xargs -d '\n' rm -f --"
-  eval $log_rotate_cmd
+    #If there are more than LOGS_TO_KEEP full logs, then remove the rest
+    log_rotate_cmd="ls -1tr $BANNED_HOSTS_BACKUP_BASE_PATH/\"$BANNED_HOSTS_BASE_NAME\"_full*.bak.* | head -n -$LOGS_TO_KEEP | xargs -d '\n' rm -f --"
+    eval $log_rotate_cmd
 
-  #Copies the current backup files
-  mv $BANNED_HOSTS_PATH $BANNED_HOSTS_CURRENT_BACKUP
-  mv $BANNED_HOSTS_FULL_PATH $BANNED_HOSTS_FULL_CURRENT_BACKUP
+    #Copies the current backup files
+    mv $BANNED_HOSTS_PATH $BANNED_HOSTS_CURRENT_BACKUP
+    mv $BANNED_HOSTS_FULL_PATH $BANNED_HOSTS_FULL_CURRENT_BACKUP
 
-  #Copies the new banned host file without the unbanned hosts 
-  mv $TMP_FILE $BANNED_HOSTS_PATH
+    #Copies the new banned host file without the unbanned hosts 
+    mv $TMP_FILE $BANNED_HOSTS_PATH
 
-  #Recreates the full log file
-  touch $BANNED_HOSTS_FULL_PATH
+    #Recreates the full log file
+    touch $BANNED_HOSTS_FULL_PATH
 
-  #Reloads apache configuration
-  $APACHE_RELOAD_CMD
+    #Reloads apache configuration
+    $APACHE_RELOAD_CMD
 
-  #Zips the log files
-  $ZIP_COMMAND $BASE_LOG_FILE_PATH/*.log
+    #Zips the log files
+    $ZIP_COMMAND $BASE_LOG_FILE_PATH/*.log
 
-  #If there are more than LOGS_TO_KEEP logs, then remove the rest
-  log_rotate_cmd="ls -1tr $BASE_LOG_FILE_PATH/*.log.* | head -n -$LOGS_TO_KEEP | xargs -d '\n' rm -f --"
-  eval $log_rotate_cmd
+    #If there are more than LOGS_TO_KEEP logs, then remove the rest
+    log_rotate_cmd="ls -1tr $BASE_LOG_FILE_PATH/*.log.* | head -n -$LOGS_TO_KEEP | xargs -d '\n' rm -f --"
+    eval $log_rotate_cmd
 
-  #Moves the current log
-  mv $CURRENT_LOG_FILE $BASE_LOG_FILE_PATH
+    #Moves the current log
+    mv $CURRENT_LOG_FILE $BASE_LOG_FILE_PATH
+  else
+    echo "Finished debugging"
+    echo "Please check the following files to see the results:"
+    echo "* $CURRENT_LOG_FILE"
+    echo "* $TMP_FILE"
+    echo "You can delete them afterwards by running:"
+    echo "rm $CURRENT_LOG_FILE $TMP_FILE"
+  fi
 else
   #This will keep the function reading ips until the apache server gets stopped or restarted
   #or if ran interactively, then until the user press CTRL+C
