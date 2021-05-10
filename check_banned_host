@@ -147,6 +147,7 @@ function expire_banned_host(){
     if [[ "${entry_values[1]}" == "allow" ]] ; then
       #It is a whitelisted host
       echo_line=1
+      KEPT_IPS=$((KEPT_IPS+1))
     elif [[ "${entry_values[1]}" == "deny" ]] ; then
       #This host was banned, now checking if banned time has passed
 
@@ -165,6 +166,7 @@ function expire_banned_host(){
       #If the banning time doesn't have passed yet, then it will be echoed
       if (( block_expiration > current_seconds )); then
         echo_line=1
+        KEPT_IPS=$((KEPT_IPS+1))
       fi
     else
       #Other things will be always echoed
@@ -176,10 +178,11 @@ function expire_banned_host(){
     #Saves this entry to the temporal file
     log_message "Line: $LINE_NO was kept:"
     echo "$file_entry_par" >> $TMP_FILE
+    KEPT_LINES=$((KEPT_LINES+1))
   else
     #Prints some debug info
     log_message "Host in line: $LINE_NO was unbanned:"
-    DROPPED=$((DROPPED+1))
+    DROPPED_IPS=$((DROPPED_IPS+1))
   fi
   log_message $file_entry_par
 }
@@ -190,21 +193,27 @@ if [[ $# == "1" ]] ; then
 fi
 
 if [[ $SCRIPT_ACTION == "rotate" || $SCRIPT_ACTION == "debug" ]] ; then
+  log_message "*******************************************************************************"
   log_message "Current date: `date`"
   #Human representation of the UNBAN_TIME
   UNBAN_TIME_HUMAN=`eval "echo $(date -ud "@$UNBAN_TIME" +'$((%s/3600/24)) days %H hours %M minutes %S seconds')"`
   log_message "Unban time:   $UNBAN_TIME_HUMAN"
+  log_message "*******************************************************************************"
   > $TMP_FILE
   LINE_NO=0
-  DROPPED="0"
+  DROPPED_IPS="0"
+  KEPT_IPS="0"
+  KEPT_LINES="0"
   while read file_entry; do
     LINE_NO=$((LINE_NO+1))
     expire_banned_host "$file_entry"
   done < $BANNED_HOSTS_PATH
-  log_message "Processed:   $LINE_NO entries"
-  log_message "Dropped:     $DROPPED entries"
+  log_message "*******************************************************************************"
+  log_message "Processed:   $LINE_NO lines"
+  log_message "Kept         $KEPT_LINES lines, from which $KEPT_IPS were whitelists or banned ips"
+  log_message "Dropped:     $DROPPED_IPS expired bans"
   log_message "Finished at: `date`"
-  log_message ""
+  log_message "*******************************************************************************"
 
   if [[ $SCRIPT_ACTION == "rotate" ]] ; then
     #Zips the bakup file before moving the current backup
