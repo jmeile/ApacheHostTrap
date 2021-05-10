@@ -4,19 +4,22 @@
 #Checks if a host is present in the blacklist host text file.
 
 #Usage:
-# 1) ./check_banned_host [rotate] -> Here you can interactivelly write the ips
-#    you want to check, then the script will echo an answer
-# 2) ./check_banned_host [rotate] < blacklisted_hosts.txt --> Here the file
-#    blacklisted_hosts.txt will be scanned and an answer will be either printed
-#    or it will be rotated
-# 3) ./check_banned_host debug < blacklisted_hosts.txt --> It will only print 
-#    the current whitelists, bans, and expirations, but it won't remove expired 
-#    bans. It is only a way of showing current banned ips.
-# 4) it will be called from Apache. Here Apache will handle the request
+# 1) ./check_banned_host -> Here you can interactivelly write the ips you want
+#    to check, then the script will echo an answer
+# 2) ./check_banned_host < blacklisted_hosts.txt --> Here the file
+#    blacklisted_hosts.txt will be scanned and an answer will be printed
+# 3) ./check_banned_host rotate --> the file blacklisted_hosts.txt and
+#    blacklisted_hosts_full.txt will be rotated. The first file will kept only
+#    comments, whitelists, and currently banned ips; expired bans will be
+#    dropped. The second file will be truncated. Copies of both files previous
+#    to the script execution will be saved on the logs folder.
+# 4) ./check_banned_host debug --> It will only print the current whitelists,
+#    bans, and expirations, but it won't remove expired bans. It is only a way
+#    of showing current banned ips.
+# 5) it will be called from Apache. Here Apache will handle the request
 #    according to the answer code
 
-
-#If the script is called without argumentsm then it will return the following:
+#If the script is called without arguments, then it will return the following:
 #* If the host is suffixed by: deny, then it will get the banned time. If it
 #  doesn't have expired yet, then it will return 0 (host is still banned);
 #  otherwise, it will return 1 (host isn't banned anymore so, checks will be
